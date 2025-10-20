@@ -85,6 +85,11 @@ Configurar deploy automatizado via AWS SAM ou Terraform.
 
 Implementar um pipeline CI/CD no GitHub Actions.
 
+---
+
+## Conclusão
+
+A execução deste projeto permitiu compreender a importância de eventos e triggers entre serviços AWS, bem como a aplicação prática de boas práticas de IAM, CloudFormation e monitoramento. Automatizar processos reduz erros, aumenta a eficiência e prepara o caminho para arquiteturas mais complexas e escaláveis.
 
 
 
