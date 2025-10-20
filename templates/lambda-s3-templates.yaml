@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Cria bucket S3 e função Lambda acionada por eventos S3'
+
+Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: LambdaS3Policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaS3AutomationFunction
+      Runtime: python3.12
+      Handler: lambda/handler.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              print(json.dumps(event, indent=2))
+              return {'statusCode': 200, 'body': json.dumps('Sucesso!')}
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt LambdaFunction.Arn
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !GetAtt S3Bucket.Arn
+
+Outputs:
+  BucketName:
+    Description: 'Nome do bucket criado'
+    Value: !Ref S3Bucket
+  LambdaName:
+    Description: 'Nome da função Lambda'
+    Value: !Ref LambdaFunction
